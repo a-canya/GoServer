@@ -7,7 +7,8 @@ import (
 )
 
 func TestGetUsers(t *testing.T) {
-	request, _ := http.NewRequest(http.MethodGet, "/", nil)
+	// Request users
+	request, _ := http.NewRequest(http.MethodGet, "/getUsers", nil)
 	response := httptest.NewRecorder()
 
 	GetUsersServer(response, request)
@@ -20,4 +21,20 @@ func TestGetUsers(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 	})
+
+	// Wrong request
+	request2, _ := http.NewRequest(http.MethodGet, "/someUnusedPath", nil)
+	response2 := httptest.NewRecorder()
+
+	GetUsersServer(response2, request2)
+
+	t.Run("unused url path: returns error", func(t *testing.T) {
+		got := response2.Body.String()
+		want := ""
+
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
 }
