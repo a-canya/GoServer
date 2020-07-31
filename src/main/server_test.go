@@ -11,7 +11,7 @@ func TestGetUsers(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/getUsers", nil)
 	response := httptest.NewRecorder()
 
-	GetUsersServer(response, request)
+	Server(response, request)
 
 	t.Run("returns list fo users in the social network", func(t *testing.T) {
 		got := response.Body.String()
@@ -26,7 +26,7 @@ func TestGetUsers(t *testing.T) {
 	request2, _ := http.NewRequest(http.MethodGet, "/someUnusedPath", nil)
 	response2 := httptest.NewRecorder()
 
-	GetUsersServer(response2, request2)
+	Server(response2, request2)
 
 	t.Run("unused url path: returns error", func(t *testing.T) {
 		got := response2.Body.String()
