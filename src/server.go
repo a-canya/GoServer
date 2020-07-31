@@ -6,5 +6,5 @@ import (
 )
 
 func Server(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("")
+	fmt.Fprint(w, "[arnau]")
 }
