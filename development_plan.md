@@ -6,6 +6,7 @@ Code using Go Language (https://golang.org/)
 
 ## Features
 
+- F0. Get users
 - F1. Sign up
 - F2. Req friendship
 - F3. Accept friendship
