@@ -10,7 +10,7 @@ func TestGetUsers(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
 	response := httptest.NewRecorder()
 
-	Server(response, request)
+	GetUsersServer(response, request)
 
 	t.Run("returns list fo users in the social network", func(t *testing.T) {
 		got := response.Body.String()
