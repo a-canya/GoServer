@@ -98,7 +98,7 @@ func RunTest(t *testing.T, s *UsersServer, name, url, want string) {
 	t.Run(name, func(t *testing.T) {
 		got := response.Body.String()
 		want := want
-		AssertResponseBody(t, got, want)
+		AssertResponseBody(t, got, want) // ToDo
 	})
 }
 
@@ -155,6 +155,8 @@ func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, 
 	request.Header.Set("Content-type", "appliaction/json")
 
 	response := httptest.NewRecorder()
+
+	s.ServeHTTP(response, request)
 
 	t.Run(testName, func(t *testing.T) {
 		gotStatus := response.Code
