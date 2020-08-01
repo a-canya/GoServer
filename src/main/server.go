@@ -31,21 +31,3 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-
-/*
-// GetUsers returns a list of all username sin the social network
-// STUB
-func GetUsers(usersPersistMemory *map[string]string) []string {
-	users := GetKeys(usersPersistMemory)
-	return users
-}
-*/
-
-/*
-// SignUpUser signs up a user with username and password defined in the request r
-// STUB
-func SignUpUser(r *http.Request, usersPersistMemory *map[string]string) string {
-	(*usersPersistMemory)["arnau"] = "arnau's password"
-	return "ok"
-}
-*/
