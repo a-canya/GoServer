@@ -21,7 +21,7 @@ func TestGetUsers(t *testing.T) {
 	RunGetUsersTest(t, server, "returns list of users in the social network", "[arnau]")
 
 	// Wrong request
-	RunTest(t, server, "unused url path: should return no string", "/someUnusedPath", "")
+	RunTest(t, server, "unused url path: should return no string", "/someUnusedPath", http.StatusNotFound)
 }
 
 func TestSignUp(t *testing.T) {
@@ -94,16 +94,21 @@ func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
 	})
 }
 
-func RunTest(t *testing.T, s *UsersServer, name, url, want string) {
+func RunTest(t *testing.T, s *UsersServer, name, url string, expectedHTTPStatus int) {
 	request, _ := http.NewRequest(http.MethodGet, url, nil)
 	response := httptest.NewRecorder()
 
 	s.ServeHTTP(response, request)
 
 	t.Run(name, func(t *testing.T) {
-		got := response.Body.String()
-		want := want
-		AssertResponseBody(t, got, want) // ToDo use HTTP status codes
+		gotStatus := response.Code
+		wantStatus := expectedHTTPStatus
+		ok := AssertStatus(t, gotStatus, wantStatus)
+
+		if !ok {
+			gotBody := response.Body.String()
+			t.Errorf("Got body: %q", gotBody)
+		}
 	})
 }
 
