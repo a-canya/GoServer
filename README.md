@@ -30,5 +30,5 @@ Responds to a friendship request, either accepting or declining. Body must conta
 - `acceptRequest`: either "1" or "0" indicating whether the friendship request is accepted or not
 If username/password validation fails will return HTTP status Unauthorized, if preconditions are not met will return HTTP status BadRequest, otherwise should return OK.
 
-### GET `/getFriends/`_user_
-Returns a list of friends of _user_. If _user_ does not exist, it will return a HTTP status BadRequest.
+### GET `/getFriends/`_\<user\>_
+Returns a list of friends of _\<user\>_. If _\<user\>_ does not exist, it will return a HTTP status BadRequest.
