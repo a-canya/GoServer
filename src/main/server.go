@@ -15,6 +15,7 @@ type UsersStore interface {
 	AddUser(name string, password string) bool
 	UserExists(name string) bool
 	RequestFriendship(from, to string) bool
+	CheckUsersPassword(user, password string) bool
 }
 
 // UsersServer is a strcuture which contains an interface to interact with the users DB
@@ -113,6 +114,12 @@ func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request)
 
 	var info map[string]string
 	json.Unmarshal(body, &info)
+
+	// Check credentials
+	if !s.store.CheckUsersPassword(info["userFrom"], info["pass"]) {
+		(*w).WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
 	// Check if users exist
 	if !s.store.UserExists(info["userFrom"]) || !s.store.UserExists(info["userTo"]) {

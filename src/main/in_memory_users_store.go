@@ -48,6 +48,12 @@ func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
 	return true
 }
 
+// CheckUsersPassword returns true if user existst and has this password
+func (i *InMemoryUsersStore) CheckUsersPassword(user, password string) bool {
+	storedPassword, exists := i.users[user]
+	return exists && storedPassword == password
+}
+
 // GetKeys returns a slice of the keys of map m
 // thoughts: returning a ptr might be more efficient; implementing this with interfaces would make func more general
 func GetKeys(m *map[string]string) []string {
