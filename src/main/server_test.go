@@ -70,8 +70,9 @@ func TestFriendshipRequest(t *testing.T) {
 	RunFriendshipRequestTest(t, server, "request friendship (to user does not exist)", "arnau", "barbara", "12345678", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", "12345678", http.StatusUnauthorized)
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", "12345678", http.StatusBadRequest)
-	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made; this situation is strange but should be possible)",
-		"sergi", "arnau", "12345678", http.StatusOK) // ToDo make this impossible (it makes no sense and complicates the acceptance)
+	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made)", "sergi", "arnau", "12345678", http.StatusBadRequest)
+	// I decided not to accept such requests (they make no sense and complicate the accept request function)
+
 	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", "12345678", http.StatusOK)
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", "12345678", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (wrong password)", "berta", "sergi", "wrongPass", http.StatusUnauthorized)
