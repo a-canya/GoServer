@@ -9,20 +9,6 @@ import (
 	"testing"
 )
 
-type StubUsersStore struct {
-	users map[string]string
-}
-
-func (s *StubUsersStore) GetUsers() []string {
-	usernames := GetKeys(&s.users)
-	return usernames
-}
-
-func (s *StubUsersStore) AddUser(name string, password string) bool {
-	s.users[name] = password
-	return true
-}
-
 type testOptions struct {
 	name string
 	want string
@@ -46,7 +32,7 @@ func RunTest(t *testing.T, s *UsersServer, op *testOptions) {
 }
 
 func TestGetUsers(t *testing.T) {
-	store := StubUsersStore{
+	store := InMemoryUsersStore{
 		users: map[string]string{
 			"arnau": "1234",
 		},
@@ -62,7 +48,7 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestSignUp(t *testing.T) {
-	store := StubUsersStore{
+	store := InMemoryUsersStore{
 		users: map[string]string{},
 	}
 
