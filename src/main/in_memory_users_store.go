@@ -5,12 +5,6 @@ type InMemoryUsersStore struct {
 	users map[string]string
 }
 
-// NewInMemoryUsersStore returns a new InMemoryUsersStore
-func NewInMemoryUsersStore() *InMemoryUsersStore {
-	store := InMemoryUsersStore{}
-	return &store
-}
-
 // GetUsers retrieves list of users
 func (i *InMemoryUsersStore) GetUsers() []string {
 	usernames := GetKeys(&i.users)
