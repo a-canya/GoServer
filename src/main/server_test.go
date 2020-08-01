@@ -234,17 +234,17 @@ func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, 
 	})
 }
 
-func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, userFriendshipRequest, password string, acceptRequest bool, expectedHTTPStatus int) {
+func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, otherUser, password string, acceptRequest bool, expectedHTTPStatus int) {
 	accept := "0"
 	if acceptRequest {
 		accept = "1"
 	}
 
 	requestBody, err := json.Marshal(map[string]string{
-		"user":                  user,
-		"pass":                  password,
-		"userFriendshipRequest": userFriendshipRequest,
-		"acceptRequest":         accept,
+		"user":          user,
+		"pass":          password,
+		"otherUser":     otherUser,
+		"acceptRequest": accept,
 	})
 
 	if err != nil {

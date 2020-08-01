@@ -118,7 +118,7 @@ func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http
 
 	user := info["user"]
 	pass := info["pass"]
-	otherUser := info["userFriendshipRequest"]
+	otherUser := info["otherUser"]
 	accept := false
 	if info["acceptRequest"] == "1" {
 		accept = true
