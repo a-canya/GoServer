@@ -87,6 +87,7 @@ func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
 		got := response.Body.String()
 		want := want
 
+		// ToDo check if users are sent in different order
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}
@@ -102,7 +103,7 @@ func RunTest(t *testing.T, s *UsersServer, name, url, want string) {
 	t.Run(name, func(t *testing.T) {
 		got := response.Body.String()
 		want := want
-		AssertResponseBody(t, got, want) // ToDo
+		AssertResponseBody(t, got, want) // ToDo use HTTP status codes
 	})
 }
 

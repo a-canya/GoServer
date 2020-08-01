@@ -34,6 +34,8 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case "requestFriendship":
 		s.RequestFriendship(&w, r)
+
+		// ToDo Check default case
 	}
 }
 
