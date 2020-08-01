@@ -91,20 +91,3 @@ func TestSignUp(t *testing.T) {
 	// Request users
 	RunTest(t, server, &testOptions{name: "list of users should include recently created user", want: "[arnau]", url: "/getUsers"})
 }
-
-/*func TestProva(t *testing.T) {
-	mymap := map[string]string{}
-	for k := range mymap {
-		fmt.Println(k)
-	}
-
-	fmt.Println("adding key/val pair")
-	mymap["mykey"] = "myval"
-	mykeys := GetKeys(&mymap)
-	fmt.Println(mykeys)
-
-	t.Run("hola?", func(_ *testing.T) {
-		return
-	})
-}
-*/
