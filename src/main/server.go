@@ -30,6 +30,7 @@ type UsersServer struct {
 func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	option := strings.Split(r.URL.Path, "/")[1]
 	switch option {
+
 	case "getUsers":
 		fmt.Fprint(w, s.store.GetUsers())
 
@@ -52,22 +53,21 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // SignUp takes a signUp HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
 func (s *UsersServer) SignUp(w *http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		(*w).WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(*w, "Couldn't read the data")
+	info, ok := GetRequestInfo(w, r)
+	if !ok {
+		return
 	}
 
-	var info map[string]string
-	json.Unmarshal(body, &info)
+	user := info["user"]
+	pass := info["pass"]
 
-	if ok, msg := CheckUsernameAndPassword(info["user"], info["pass"]); !ok {
+	if ok, msg := CheckUsernameAndPassword(user, pass); !ok {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, msg)
 		return
 	}
 
-	if ok := s.store.AddUser(info["user"], info["pass"]); ok {
+	if ok := s.store.AddUser(user, pass); ok {
 		(*w).WriteHeader(http.StatusOK)
 	} else {
 		(*w).WriteHeader(http.StatusBadRequest)
@@ -77,30 +77,30 @@ func (s *UsersServer) SignUp(w *http.ResponseWriter, r *http.Request) {
 
 // RequestFriendship takes a requestFriendship HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
 func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		(*w).WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(*w, "Couldn't read the data")
+	info, ok := GetRequestInfo(w, r)
+	if !ok {
+		return
 	}
 
-	var info map[string]string
-	json.Unmarshal(body, &info)
+	user := info["user"]
+	pass := info["pass"]
+	userTo := info["userTo"]
 
 	// Check credentials
-	if !s.store.CheckUsersPassword(info["user"], info["pass"]) {
+	if !s.store.CheckUsersPassword(user, pass) {
 		(*w).WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	// Check if users exist
-	if !s.store.UserExists(info["user"]) || !s.store.UserExists(info["userTo"]) {
+	// Check if other user exists
+	if !s.store.UserExists(userTo) {
 		(*w).WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(*w, "User does not exist") // error msg could be more explicit: which user does not exist?
+		fmt.Fprint(*w, "User does not exist")
 		return
 	}
 
 	// Add request to the DB
-	if ok := s.store.RequestFriendship(info["user"], info["userTo"]); ok {
+	if ok := s.store.RequestFriendship(user, userTo); ok {
 		(*w).WriteHeader(http.StatusOK)
 	} else {
 		(*w).WriteHeader(http.StatusBadRequest)
@@ -111,14 +111,10 @@ func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request)
 // RespondToFriendshipRequest takes a respondToFriendshipRequest HTTP request (r) to the UsersServer (s),
 // processes it and populates the ResponseWriter (w)
 func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		(*w).WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(*w, "Couldn't read the data")
+	info, ok := GetRequestInfo(w, r)
+	if !ok {
+		return
 	}
-
-	var info map[string]string
-	json.Unmarshal(body, &info)
 
 	user := info["user"]
 	pass := info["pass"]
@@ -127,7 +123,7 @@ func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http
 	if info["acceptRequest"] == "1" {
 		accept = true
 	} else if info["acceptRequest"] != "0" {
-		(*w).WriteHeader(http.StatusInternalServerError)
+		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "acceptRequest field must be either 1 or 0")
 	}
 
@@ -137,10 +133,10 @@ func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http
 		return
 	}
 
-	// Check if users exist
-	if !s.store.UserExists(user) || !s.store.UserExists(otherUser) {
+	// Check if other user exists
+	if !s.store.UserExists(otherUser) {
 		(*w).WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(*w, "User does not exist") // error msg could be more explicit: which user does not exist?
+		fmt.Fprint(*w, "User does not exist")
 		return
 	}
 
@@ -157,6 +153,7 @@ func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http
 func (s *UsersServer) GetFriends(w *http.ResponseWriter, r *http.Request) {
 	user := strings.Split(r.URL.Path, "/")[2] // if index breaks request is bad formatted
 
+	// Check if user exists
 	if !s.store.UserExists(user) {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "User does not exist")
@@ -204,4 +201,22 @@ func CheckUsernameAndPassword(username, password string) (bool, string) {
 	}
 
 	return ok, msg
+}
+
+// GetRequestInfo returns the JSON information in the request r in a map format
+// Iff an error happens, w will be populated and ok will be false
+func GetRequestInfo(w *http.ResponseWriter, r *http.Request) (map[string]string, bool) {
+	ok := true
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		(*w).WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(*w, "Couldn't read the data")
+		ok = false
+	}
+
+	var info map[string]string
+	json.Unmarshal(body, &info)
+
+	return info, ok
 }

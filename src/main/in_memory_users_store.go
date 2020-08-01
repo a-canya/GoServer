@@ -74,7 +74,7 @@ func (s *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, 
 
 	for i := 0; i < len(requests); i++ {
 		if requests[i] == user {
-			s.friendshipRequests[otherUser] = Remove(requests, j)
+			s.friendshipRequests[otherUser] = Remove(requests, i)
 			if acceptRequest {
 				s.friends[user] = append(myFriends, otherUser)
 				s.friends[otherUser] = append(theirFriends, user)
