@@ -56,7 +56,7 @@ func TestSignUp(t *testing.T) {
 	RunGetUsersTest(t, server, "list of users should include both users created", "[arnau carla]")
 }
 
-func TestSendFriendshipRequest(t *testing.T) {
+func TestFriendshipRequest(t *testing.T) {
 	store := EmptyUsersStore()
 	server := &UsersServer{store: store}
 
@@ -75,6 +75,9 @@ func TestSendFriendshipRequest(t *testing.T) {
 	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", "12345678", http.StatusOK)
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", "12345678", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (wrong password)", "berta", "sergi", "wrongPass", http.StatusUnauthorized)
+
+	// Accept friendship request
+	RunRespondToFriendshipTest(t, server, "accept friendship", "sergi", "arnau", "12345678", true, http.StatusOK)
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
@@ -181,6 +184,46 @@ func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, 
 	})
 }
 
+func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, userFriendshipRequest, password string, acceptRequest bool, expectedHTTPStatus int) {
+	accept := "0"
+	if acceptRequest {
+		accept = "1"
+	}
+
+	requestBody, err := json.Marshal(map[string]string{
+		"user":                  user,
+		"pass":                  password,
+		"userFriendshipRequest": userFriendshipRequest,
+		"acceptRequest":         accept,
+	})
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, "/acceptFriendship", bytes.NewBuffer(requestBody))
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	request.Header.Set("Content-type", "appliaction/json")
+
+	response := httptest.NewRecorder()
+
+	s.ServeHTTP(response, request)
+
+	t.Run(testName, func(t *testing.T) {
+		gotStatus := response.Code
+		wantStatus := expectedHTTPStatus
+		ok := AssertStatus(t, gotStatus, wantStatus)
+
+		if !ok {
+			gotBody := response.Body.String()
+			t.Errorf("Got body: %q", gotBody)
+		}
+	})
+}
 func AssertStatus(t *testing.T, got, want int) bool {
 	t.Helper()
 	if got != want {
