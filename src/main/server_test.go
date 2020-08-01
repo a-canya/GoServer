@@ -66,14 +66,15 @@ func TestSendFriendshipRequest(t *testing.T) {
 	RunSignUpTest(t, server, "sign up a new user", "berta", "12345678", http.StatusOK)
 
 	// Send friendship request
-	RunFriendshipRequestTest(t, server, "request friendship", "arnau", "sergi", http.StatusOK)
-	RunFriendshipRequestTest(t, server, "request friendship (to user does not exist)", "arnau", "barbara", http.StatusBadRequest)
-	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", http.StatusBadRequest)
-	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship", "arnau", "sergi", "12345678", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (to user does not exist)", "arnau", "barbara", "12345678", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", "12345678", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", "12345678", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made; this situation is strange but should be possible)",
-		"sergi", "arnau", http.StatusOK)
-	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", http.StatusOK)
-	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", http.StatusBadRequest)
+		"sergi", "arnau", "12345678", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", "12345678", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", "12345678", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (wrong password)", "berta", "sergi", "wrongPass", http.StatusOK)
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
@@ -139,10 +140,11 @@ func RunSignUpTest(t *testing.T, s *UsersServer, testName, username, password st
 	})
 }
 
-func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, userTo string, expectedHTTPStatus int) {
+func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, userTo, password string, expectedHTTPStatus int) {
 	requestBody, err := json.Marshal(map[string]string{
 		"userFrom": userFrom,
 		"userTo":   userTo,
+		"pass":     password,
 	})
 
 	if err != nil {
