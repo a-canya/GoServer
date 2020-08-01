@@ -74,7 +74,7 @@ func TestSendFriendshipRequest(t *testing.T) {
 		"sergi", "arnau", "12345678", http.StatusOK)
 	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", "12345678", http.StatusOK)
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", "12345678", http.StatusBadRequest)
-	RunFriendshipRequestTest(t, server, "request friendship (wrong password)", "berta", "sergi", "wrongPass", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (wrong password)", "berta", "sergi", "wrongPass", http.StatusUnauthorized)
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
