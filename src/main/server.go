@@ -30,15 +30,15 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, s.store.GetUsers())
 
 	case "signUp":
-		SignUp(s, &w, r)
+		s.SignUp(&w, r)
 
 	case "requestFriendship":
-		RequestFriendship(s, &w, r)
+		s.RequestFriendship(&w, r)
 	}
 }
 
 // SignUp takes a signUp HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
-func SignUp(s *UsersServer, w *http.ResponseWriter, r *http.Request) {
+func (s *UsersServer) SignUp(w *http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		(*w).WriteHeader(http.StatusInternalServerError)
@@ -102,7 +102,7 @@ func CheckUsernameAndPassword(username, password string) (bool, string) {
 }
 
 // RequestFriendship takes a requestFriendship HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
-func RequestFriendship(s *UsersServer, w *http.ResponseWriter, r *http.Request) {
+func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		(*w).WriteHeader(http.StatusInternalServerError)
