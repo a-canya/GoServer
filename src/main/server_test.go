@@ -32,16 +32,25 @@ func TestSignUp(t *testing.T) {
 	RunGetUsersTest(t, server, "list of users at the beginning should be empty", "[]")
 
 	// Sign up new user
-	RunSignUpTest(t, server, "sign up a new user", "arnau", "1234", http.StatusOK)
+	RunSignUpTest(t, server, "sign up a new user", "arnau", "12345678", http.StatusOK)
 
 	// Request users
 	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
 
 	// Sign up another new user
-	RunSignUpTest(t, server, "sign up another new user", "carla", "password", http.StatusOK)
+	RunSignUpTest(t, server, "sign up another new user", "carla", "Password", http.StatusOK)
 
-	// Sign up same user
-	RunSignUpTest(t, server, "sign up an already existing user", "arnau", "1234", http.StatusBadRequest)
+	// Sign up already existing user
+	RunSignUpTest(t, server, "sign up an already existing user", "arnau", "12345678", http.StatusBadRequest)
+
+	// Sign ups not fulfilling username/password constraints (username 5-10 alphanum characters, password 8-12 alphanum chars)
+	RunSignUpTest(t, server, "sign up with username too short", "john", "password", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with username too long", "montserrat0", "password", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with password too short", "jonathan", "1234567", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with password too long", "william", "123456789abcd", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with non-alphanumeric username", "arnau!", "12345678", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with non-alphanumeric password", "maria", "$€cr€tWörd", http.StatusBadRequest)
+	RunSignUpTest(t, server, "sign up with lots of constraints not fulfilled", "I'm the boss!", "¬¬'", http.StatusBadRequest)
 
 	// Request users
 	RunGetUsersTest(t, server, "list of users should include both users created", "[arnau carla]")
