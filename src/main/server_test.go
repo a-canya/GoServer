@@ -9,17 +9,31 @@ import (
 	"testing"
 )
 
+type StubUsersStore struct {
+	users map[string]string
+}
+
+func (s *StubUsersStore) GetUsers() []string {
+	usernames := GetKeys(&s.users)
+	return usernames
+}
+
+func (s *StubUsersStore) AddUser(name string, password string) bool {
+	s.users[name] = password
+	return true
+}
+
 type testOptions struct {
 	name string
 	want string
 	url  string
 }
 
-func RunTest(t *testing.T, op *testOptions) {
+func RunTest(t *testing.T, s *UsersServer, op *testOptions) {
 	request, _ := http.NewRequest(http.MethodGet, op.url, nil)
 	response := httptest.NewRecorder()
 
-	Server(response, request)
+	s.ServeHTTP(response, request)
 
 	t.Run(op.name, func(t *testing.T) {
 		got := response.Body.String()
@@ -32,16 +46,30 @@ func RunTest(t *testing.T, op *testOptions) {
 }
 
 func TestGetUsers(t *testing.T) {
+	store := StubUsersStore{
+		users: map[string]string{
+			"arnau": "1234",
+		},
+	}
+
+	server := &UsersServer{store: &store}
+
 	// Request users
-	RunTest(t, &testOptions{name: "returns list of users in the social network", want: "[arnau]", url: "/getUsers"})
+	RunTest(t, server, &testOptions{name: "returns list of users in the social network", want: "[arnau]", url: "/getUsers"})
 
 	// Wrong request
-	RunTest(t, &testOptions{name: "unused url path: should return no string", want: "", url: "/someUnusedPath"})
+	RunTest(t, server, &testOptions{name: "unused url path: should return no string", want: "", url: "/someUnusedPath"})
 }
 
 func TestSignUp(t *testing.T) {
+	store := StubUsersStore{
+		users: map[string]string{},
+	}
+
+	server := &UsersServer{store: &store}
+
 	// Request users
-	RunTest(t, &testOptions{name: "list of users at the beginning should be empty", want: "[]", url: "/getUsers"})
+	RunTest(t, server, &testOptions{name: "list of users at the beginning should be empty", want: "[]", url: "/getUsers"})
 
 	// Sign up new user
 	requestBody, err := json.Marshal(map[string]string{
@@ -63,7 +91,7 @@ func TestSignUp(t *testing.T) {
 
 	response := httptest.NewRecorder()
 
-	Server(response, request)
+	server.ServeHTTP(response, request)
 
 	t.Run("sign up a new user", func(t *testing.T) {
 		got := response.Body.String()
@@ -75,5 +103,22 @@ func TestSignUp(t *testing.T) {
 	})
 
 	// Request users
-	RunTest(t, &testOptions{name: "list of users should include recently created user", want: "[arnau]", url: "/getUsers"})
+	RunTest(t, server, &testOptions{name: "list of users should include recently created user", want: "[arnau]", url: "/getUsers"})
 }
+
+/*func TestProva(t *testing.T) {
+	mymap := map[string]string{}
+	for k := range mymap {
+		fmt.Println(k)
+	}
+
+	fmt.Println("adding key/val pair")
+	mymap["mykey"] = "myval"
+	mykeys := GetKeys(&mymap)
+	fmt.Println(mykeys)
+
+	t.Run("hola?", func(_ *testing.T) {
+		return
+	})
+}
+*/
