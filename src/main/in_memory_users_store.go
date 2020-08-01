@@ -12,13 +12,18 @@ func (i *InMemoryUsersStore) GetUsers() []string {
 }
 
 // AddUser adds a user
-// STUB
 func (i *InMemoryUsersStore) AddUser(name string, password string) bool {
 	if _, alreadyExists := i.users[name]; alreadyExists {
 		return false
 	}
 	i.users[name] = password
 	return true
+}
+
+// UserExists returns true iff user with name `name` exists
+func (i *InMemoryUsersStore) UserExists(name string) bool {
+	_, exists := i.users[name]
+	return exists
 }
 
 // GetKeys returns a slice of the keys of map m

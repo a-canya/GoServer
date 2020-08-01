@@ -13,6 +13,7 @@ import (
 type UsersStore interface {
 	GetUsers() []string
 	AddUser(name string, password string) bool
+	UserExists(name string) bool
 }
 
 // UsersServer is a strcuture which contains an interface to interact with the users DB
@@ -24,16 +25,18 @@ type UsersServer struct {
 func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	option := strings.Split(r.URL.Path, "/")[1]
 	switch option {
-
 	case "getUsers":
 		fmt.Fprint(w, s.store.GetUsers())
 
 	case "signUp":
 		SignUp(s, &w, r)
+
+	case "requestFriendship":
+		RequestFriendship(s, &w, r)
 	}
 }
 
-// SignUp takes a signUp request to the server and processes it
+// SignUp takes a signUp HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
 func SignUp(s *UsersServer, w *http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -95,4 +98,27 @@ func CheckUsernameAndPassword(username, password string) (bool, string) {
 	}
 
 	return ok, msg
+}
+
+// RequestFriendship takes a requestFriendship HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
+func RequestFriendship(s *UsersServer, w *http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		(*w).WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(*w, "Couldn't read the data")
+	}
+
+	var info map[string]string
+	json.Unmarshal(body, &info)
+
+	// Check if users exist
+	if !s.store.UserExists(info["userFrom"]) || !s.store.UserExists(info["userTo"]) {
+		(*w).WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(*w, "User does not exist") // error msg could be more explicit: which user does not exist?
+		return
+	}
+
+	// ToDo: actually add pending request to the DB
+
+	(*w).WriteHeader(http.StatusOK)
 }
