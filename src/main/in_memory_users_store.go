@@ -1,7 +1,5 @@
 package main
 
-import "log"
-
 // InMemoryUsersStore collects data about users in memory.
 type InMemoryUsersStore struct {
 	users              map[string]string
@@ -33,9 +31,10 @@ func (i *InMemoryUsersStore) UserExists(name string) bool {
 // RequestFriendship adds a friendship request from user `from` to user `to`.
 // Returns false iff friendship request already exists (in this case no modifications are made)
 func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
-	log.Println("RequestFriendship from", from, "to", to)
+	// log.Println("RequestFriendship from", from, "to", to)
 	requests, exists := i.friendshipRequests[from]
-	log.Println("Current requests from", from, ":", requests)
+	// log.Println("Current requests from", from, ":", requests)
+
 	if exists {
 		if Contains(requests, to) {
 			return false
@@ -44,7 +43,8 @@ func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
 	} else {
 		i.friendshipRequests[from] = []string{to}
 	}
-	log.Println("Done! Requests =", requests, " and i.friendshipRequests[from] =", i.friendshipRequests[from])
+	// log.Println("Done! Requests =", requests, " and i.friendshipRequests[from] =", i.friendshipRequests[from])
+
 	return true
 }
 
