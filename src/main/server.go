@@ -52,13 +52,13 @@ func (s *UsersServer) SignUp(w *http.ResponseWriter, r *http.Request) {
 	var info map[string]string
 	json.Unmarshal(body, &info)
 
-	if ok, msg := CheckUsernameAndPassword(info["name"], info["pass"]); !ok {
+	if ok, msg := CheckUsernameAndPassword(info["user"], info["pass"]); !ok {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, msg)
 		return
 	}
 
-	if ok := s.store.AddUser(info["name"], info["pass"]); ok {
+	if ok := s.store.AddUser(info["user"], info["pass"]); ok {
 		(*w).WriteHeader(http.StatusOK)
 	} else {
 		(*w).WriteHeader(http.StatusBadRequest)
@@ -117,20 +117,20 @@ func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request)
 	json.Unmarshal(body, &info)
 
 	// Check credentials
-	if !s.store.CheckUsersPassword(info["userFrom"], info["pass"]) {
+	if !s.store.CheckUsersPassword(info["user"], info["pass"]) {
 		(*w).WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	// Check if users exist
-	if !s.store.UserExists(info["userFrom"]) || !s.store.UserExists(info["userTo"]) {
+	if !s.store.UserExists(info["user"]) || !s.store.UserExists(info["userTo"]) {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "User does not exist") // error msg could be more explicit: which user does not exist?
 		return
 	}
 
 	// Add request to the DB
-	if ok := s.store.RequestFriendship(info["userFrom"], info["userTo"]); ok {
+	if ok := s.store.RequestFriendship(info["user"], info["userTo"]); ok {
 		(*w).WriteHeader(http.StatusOK)
 	} else {
 		(*w).WriteHeader(http.StatusBadRequest)

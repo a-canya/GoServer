@@ -114,7 +114,7 @@ func RunTest(t *testing.T, s *UsersServer, name, url string, expectedHTTPStatus 
 
 func RunSignUpTest(t *testing.T, s *UsersServer, testName, username, password string, expectedHTTPStatus int) {
 	requestBody, err := json.Marshal(map[string]string{
-		"name": username,
+		"user": username,
 		"pass": password,
 	})
 
@@ -148,9 +148,9 @@ func RunSignUpTest(t *testing.T, s *UsersServer, testName, username, password st
 
 func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, userTo, password string, expectedHTTPStatus int) {
 	requestBody, err := json.Marshal(map[string]string{
-		"userFrom": userFrom,
-		"userTo":   userTo,
-		"pass":     password,
+		"user":   userFrom,
+		"userTo": userTo,
+		"pass":   password,
 	})
 
 	if err != nil {
