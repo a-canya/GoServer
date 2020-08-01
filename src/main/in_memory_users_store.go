@@ -1,9 +1,12 @@
 package main
 
+import "log"
+
 // InMemoryUsersStore collects data about users in memory.
 type InMemoryUsersStore struct {
 	users              map[string]string
 	friendshipRequests map[string][]string // friendshipRequests["john0"] == {"peter", "mike5"} means john0 has sent a friendship request to peter and mike5
+	friends            map[string][]string // must be kept symmetric all time, ie Contains(friends["peter"], "mike5") <==> Contains(friends["mike5"], "peter")
 }
 
 // GetUsers retrieves list of users
@@ -19,6 +22,8 @@ func (i *InMemoryUsersStore) AddUser(name string, password string) bool {
 		return false
 	}
 	i.users[name] = password
+	i.friendshipRequests[name] = make([]string, 0)
+	i.friends[name] = make([]string, 0)
 	return true
 }
 
@@ -41,6 +46,7 @@ func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
 		}
 		i.friendshipRequests[from] = append(requests, to)
 	} else {
+		log.Println("This should never happen")
 		i.friendshipRequests[from] = []string{to}
 	}
 	// log.Println("Done! Requests =", requests, " and i.friendshipRequests[from] =", i.friendshipRequests[from])
@@ -55,19 +61,25 @@ func (i *InMemoryUsersStore) CheckUsersPassword(user, password string) bool {
 }
 
 // RespondToFriendshipRequest responds to a friendship request from otherUser made to user
+// Returns false iff friendship request does not exist (in this case no modifications are made)
 func (i *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool {
-	requestExists := false
-
-	if requests, hasRequests := i.friendshipRequests[otherUser]; hasRequests {
-		requestExists = Contains(requests, user)
-	}
-
-	if !requestExists {
+	requests, hasRequests := i.friendshipRequests[otherUser]
+	if !hasRequests {
 		return false
 	}
 
-	// Remove friendRequest
-	return true // ToDo
+	for j := 0; j < len(requests); j++ {
+		if requests[j] == user {
+			i.friendshipRequests[otherUser] = Remove(i.friendshipRequests[otherUser], j)
+			if acceptRequest {
+				i.friends[user] = append(i.friends[user], otherUser)
+				i.friends[otherUser] = append(i.friends[otherUser], user)
+			}
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetKeys returns a slice of the keys of map m
@@ -94,11 +106,18 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
+// Remove returns a slice identical to s except that element at position i is eliminated (order not preserved)
+func Remove(s []string, i int) []string {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 // EmptyUsersStore returns a new empty InMemoryUsersStore
 func EmptyUsersStore() *InMemoryUsersStore {
 	store := InMemoryUsersStore{
 		users:              map[string]string{},
 		friendshipRequests: map[string][]string{},
+		friends:            map[string][]string{},
 	}
 	return &store
 }
