@@ -68,7 +68,7 @@ func TestSendFriendshipRequest(t *testing.T) {
 	// Send friendship request
 	RunFriendshipRequestTest(t, server, "request friendship", "arnau", "sergi", "12345678", http.StatusOK)
 	RunFriendshipRequestTest(t, server, "request friendship (to user does not exist)", "arnau", "barbara", "12345678", http.StatusBadRequest)
-	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", "12345678", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", "12345678", http.StatusUnauthorized)
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", "12345678", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made; this situation is strange but should be possible)",
 		"sergi", "arnau", "12345678", http.StatusOK)
