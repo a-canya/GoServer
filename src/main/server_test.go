@@ -34,11 +34,17 @@ func TestSignUp(t *testing.T) {
 	// Sign up new user
 	RunSignUpTest(t, server, "sign up a new user", "arnau", "1234", http.StatusOK)
 
+	// Request users
+	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
+
+	// Sign up another new user
+	RunSignUpTest(t, server, "sign up another new user", "carla", "password", http.StatusOK)
+
 	// Sign up same user
 	RunSignUpTest(t, server, "sign up an already existing user", "arnau", "1234", http.StatusBadRequest)
 
 	// Request users
-	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
+	RunGetUsersTest(t, server, "list of users should include both users created", "[arnau, carla]")
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
