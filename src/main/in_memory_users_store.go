@@ -54,6 +54,22 @@ func (i *InMemoryUsersStore) CheckUsersPassword(user, password string) bool {
 	return exists && storedPassword == password
 }
 
+// RespondToFriendshipRequest responds to a friendship request from otherUser made to user
+func (i *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool {
+	requestExists := false
+
+	if requests, hasRequests := i.friendshipRequests[otherUser]; hasRequests {
+		requestExists = Contains(requests, user)
+	}
+
+	if !requestExists {
+		return false
+	}
+
+	// Remove friendRequest
+	return true // ToDo
+}
+
 // GetKeys returns a slice of the keys of map m
 // thoughts: returning a ptr might be more efficient; implementing this with interfaces would make func more general
 func GetKeys(m *map[string]string) []string {

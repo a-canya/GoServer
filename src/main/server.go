@@ -16,6 +16,7 @@ type UsersStore interface {
 	UserExists(name string) bool
 	RequestFriendship(from, to string) bool
 	CheckUsersPassword(user, password string) bool
+	RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool
 }
 
 // UsersServer is a strcuture which contains an interface to interact with the users DB
@@ -35,6 +36,9 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case "requestFriendship":
 		s.RequestFriendship(&w, r)
+
+	case "respondToFriendshipRequest":
+		s.RespondToFriendshipRequest(&w, r)
 
 	default:
 		w.WriteHeader(http.StatusNotFound)
@@ -135,5 +139,50 @@ func (s *UsersServer) RequestFriendship(w *http.ResponseWriter, r *http.Request)
 	} else {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "Friendship request already exists")
+	}
+}
+
+// RespondToFriendshipRequest takes a respondToFriendshipRequest HTTP request (r) to the UsersServer (s),
+// processes it and populates the ResponseWriter (w)
+func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		(*w).WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(*w, "Couldn't read the data")
+	}
+
+	var info map[string]string
+	json.Unmarshal(body, &info)
+
+	user := info["user"]
+	pass := info["pass"]
+	otherUser := info["userFriendshipRequest"]
+	accept := false
+	if info["acceptRequest"] == "1" {
+		accept = true
+	} else if info["acceptRequest"] != "0" {
+		(*w).WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(*w, "acceptRequest field must be either 1 or 0")
+	}
+
+	// Check credentials
+	if !s.store.CheckUsersPassword(user, pass) {
+		(*w).WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Check if users exist
+	if !s.store.UserExists(user) || !s.store.UserExists(otherUser) {
+		(*w).WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(*w, "User does not exist") // error msg could be more explicit: which user does not exist?
+		return
+	}
+
+	// Respond to friendship request
+	if ok := s.store.RespondToFriendshipRequest(user, otherUser, accept); ok {
+		(*w).WriteHeader(http.StatusOK)
+	} else {
+		(*w).WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(*w, "Cannot respond to friendship request because request does not exist")
 	}
 }
