@@ -17,6 +17,7 @@ type UsersStore interface {
 	RequestFriendship(from, to string) bool
 	CheckUsersPassword(user, password string) bool
 	RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool
+	GetFriends(user string) []string
 }
 
 // UsersServer is a strcuture which contains an interface to interact with the users DB
@@ -39,6 +40,9 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case "respondToFriendshipRequest":
 		s.RespondToFriendshipRequest(&w, r)
+
+	case "getFriends":
+		s.GetFriends(&w, r)
 
 	default:
 		w.WriteHeader(http.StatusNotFound)
@@ -68,45 +72,6 @@ func (s *UsersServer) SignUp(w *http.ResponseWriter, r *http.Request) {
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "User already exists")
 	}
-}
-
-// CheckUsernameAndPassword returns true iff username has 5-10 alphanum characters and password has 8-12 alphanum chars.
-// If conditions are not fulfilled, msg holds an error message
-func CheckUsernameAndPassword(username, password string) (bool, string) {
-	ok := true
-	msg := ""
-
-	var isStringAlphabetic = regexp.MustCompile(`^[a-zA-Z0-9_]*$`).MatchString
-
-	if !isStringAlphabetic(username) {
-		msg += "Username has invalid characters! Username must be unique, from 5 to 10 alphanumeric characters."
-		ok = false
-	}
-
-	if !isStringAlphabetic(password) {
-		msg += "Password has invalid characters! Password must have from 8 to 12 alphanumeric characters."
-		ok = false
-	}
-
-	// Note: checking len(var) returns the length in bytes but this might not correspond to the number of characters because
-	// standard allows characters of multiple bytes. However, since we only accept alphanumeric characters this is ok
-	if len(username) < 5 {
-		msg += "Username too short! Username must be unique, from 5 to 10 alphanumeric characters."
-		ok = false
-	} else if len(username) > 10 {
-		msg += "Username too long! Username must be unique, from 5 to 10 alphanumeric characters."
-		ok = false
-	}
-
-	if len(password) < 8 {
-		msg += "Password too short! Password must have from 8 to 12 alphanumeric characters."
-		ok = false
-	} else if len(password) > 12 {
-		msg += "Password too long! Password must have from 8 to 12 alphanumeric characters."
-		ok = false
-	}
-
-	return ok, msg
 }
 
 // RequestFriendship takes a requestFriendship HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
@@ -185,4 +150,57 @@ func (s *UsersServer) RespondToFriendshipRequest(w *http.ResponseWriter, r *http
 		(*w).WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(*w, "Cannot respond to friendship request because request does not exist")
 	}
+}
+
+// GetFriends takes a getFriends HTTP request (r) to the UsersServer (s), processes it and populates the ResponseWriter (w)
+func (s *UsersServer) GetFriends(w *http.ResponseWriter, r *http.Request) {
+	user := strings.Split(r.URL.Path, "/")[2] // if index breaks request is bad formatted
+
+	if !s.store.UserExists(user) {
+		(*w).WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(*w, "User does not exist")
+		return
+	}
+
+	(*w).WriteHeader(http.StatusOK)
+	fmt.Fprint(*w, s.store.GetFriends(user))
+}
+
+// CheckUsernameAndPassword returns true iff username has 5-10 alphanum characters and password has 8-12 alphanum chars.
+// If conditions are not fulfilled, msg holds an error message
+func CheckUsernameAndPassword(username, password string) (bool, string) {
+	ok := true
+	msg := ""
+
+	var isStringAlphabetic = regexp.MustCompile(`^[a-zA-Z0-9_]*$`).MatchString
+
+	if !isStringAlphabetic(username) {
+		msg += "Username has invalid characters! Username must be unique, from 5 to 10 alphanumeric characters."
+		ok = false
+	}
+
+	if !isStringAlphabetic(password) {
+		msg += "Password has invalid characters! Password must have from 8 to 12 alphanumeric characters."
+		ok = false
+	}
+
+	// Note: checking len(var) returns the length in bytes but this might not correspond to the number of characters because
+	// standard allows characters of multiple bytes. However, since we only accept alphanumeric characters this is ok
+	if len(username) < 5 {
+		msg += "Username too short! Username must be unique, from 5 to 10 alphanumeric characters."
+		ok = false
+	} else if len(username) > 10 {
+		msg += "Username too long! Username must be unique, from 5 to 10 alphanumeric characters."
+		ok = false
+	}
+
+	if len(password) < 8 {
+		msg += "Password too short! Password must have from 8 to 12 alphanumeric characters."
+		ok = false
+	} else if len(password) > 12 {
+		msg += "Password too long! Password must have from 8 to 12 alphanumeric characters."
+		ok = false
+	}
+
+	return ok, msg
 }

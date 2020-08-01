@@ -291,7 +291,9 @@ func RunListFriends(t *testing.T, s *UsersServer, testName, user, expectedBody s
 			t.Errorf("Got body: %q", gotBody)
 		}
 
-		AssertResponseBody(t, gotBody, wantBody)
+		if wantStatus == http.StatusOK {
+			AssertResponseBody(t, gotBody, wantBody)
+		}
 	})
 }
 

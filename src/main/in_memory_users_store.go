@@ -85,6 +85,11 @@ func (i *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, 
 	return false
 }
 
+// GetFriends returns the list od friends of a given user
+func (i *InMemoryUsersStore) GetFriends(user string) []string {
+	return i.friends[user]
+}
+
 // GetKeys returns a slice of the keys of map m
 // thoughts: returning a ptr might be more efficient; implementing this with interfaces would make func more general
 func GetKeys(m *map[string]string) []string {
