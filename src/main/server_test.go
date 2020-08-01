@@ -9,10 +9,35 @@ import (
 	"testing"
 )
 
-type testOptions struct {
-	name string
-	want string
-	url  string
+func TestGetUsers(t *testing.T) {
+	store := InMemoryUsersStore{
+		users: map[string]string{
+			"arnau": "1234",
+		},
+	}
+
+	server := &UsersServer{store: &store}
+
+	// Request users
+	RunGetUsersTest(t, server, "returns list of users in the social network", "[arnau]")
+
+	// Wrong request
+	RunTest(t, server, "unused url path: should return no string", "/someUnusedPath", "")
+}
+
+func TestSignUp(t *testing.T) {
+	store := EmptyUsersStore()
+
+	server := &UsersServer{store: store}
+
+	// Request users
+	RunGetUsersTest(t, server, "list of users at the beginning should be empty", "[]")
+
+	// Sign up new user
+	RunSignUpTest(t, server, "arnau", "1234", "ok")
+
+	// Request users
+	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
@@ -77,35 +102,4 @@ func RunSignUpTest(t *testing.T, s *UsersServer, name, password, want string) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 	})
-}
-
-func TestGetUsers(t *testing.T) {
-	store := InMemoryUsersStore{
-		users: map[string]string{
-			"arnau": "1234",
-		},
-	}
-
-	server := &UsersServer{store: &store}
-
-	// Request users
-	RunGetUsersTest(t, server, "returns list of users in the social network", "[arnau]")
-
-	// Wrong request
-	RunTest(t, server, "unused url path: should return no string", "/someUnusedPath", "")
-}
-
-func TestSignUp(t *testing.T) {
-	store := EmptyUsersStore()
-
-	server := &UsersServer{store: store}
-
-	// Request users
-	RunGetUsersTest(t, server, "list of users at the beginning should be empty", "[]")
-
-	// Sign up new user
-	RunSignUpTest(t, server, "arnau", "1234", "ok")
-
-	// Request users
-	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
 }
