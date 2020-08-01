@@ -10,6 +10,7 @@ import (
 )
 
 // UsersStore is an interface for a DB in which we can add and retrieve users
+// See in_memory_users_store.go implementation for interface specifications
 type UsersStore interface {
 	GetUsers() []string
 	AddUser(name string, password string) bool

@@ -7,76 +7,77 @@ type InMemoryUsersStore struct {
 	friends            map[string][]string // must be kept symmetric all time, ie Contains(friends["peter"], "mike5") <==> Contains(friends["mike5"], "peter")
 }
 
-// GetUsers retrieves list of users
-func (i *InMemoryUsersStore) GetUsers() []string {
-	usernames := GetKeys(&i.users)
+// GetUsers retrieves a list of all users
+func (s *InMemoryUsersStore) GetUsers() []string {
+	usernames := GetKeys(&s.users)
 	return usernames
 }
 
 // AddUser adds a user with given username and password.
 // Returns false iff username already exists (in this case no modifications are made)
-func (i *InMemoryUsersStore) AddUser(name string, password string) bool {
-	if _, alreadyExists := i.users[name]; alreadyExists {
+func (s *InMemoryUsersStore) AddUser(name string, password string) bool {
+	if _, alreadyExists := s.users[name]; alreadyExists {
 		return false
 	}
-	i.users[name] = password
-	i.friendshipRequests[name] = make([]string, 0)
-	i.friends[name] = make([]string, 0)
+	s.users[name] = password
+	s.friendshipRequests[name] = make([]string, 0)
+	s.friends[name] = make([]string, 0)
 	return true
 }
 
 // UserExists returns true iff user with name `name` exists
-func (i *InMemoryUsersStore) UserExists(name string) bool {
-	_, exists := i.users[name]
+func (s *InMemoryUsersStore) UserExists(name string) bool {
+	_, exists := s.users[name]
 	return exists
 }
 
 // RequestFriendship adds a friendship request from user `from` to user `to`.
 // Returns false iff friendship request between both users already exists or users are already friends (in this case no modifications are made)
-func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
-	// log.Println("RequestFriendship from", from, "to", to)
-	myRequests := i.friendshipRequests[from]
-	// log.Println("Current requests from", from, ":", myRequests)
+// Precondition: from and to users exist in the DB and have been correctly initialized (ie using AddUser function)
+func (s *InMemoryUsersStore) RequestFriendship(from, to string) bool {
+	myRequests := s.friendshipRequests[from]
 	if Contains(myRequests, to) {
 		return false
 	}
 
-	theirRequests := i.friendshipRequests[to]
+	theirRequests := s.friendshipRequests[to]
 	if Contains(theirRequests, from) {
 		return false
 	}
 
-	myFriends := i.friends[from]
+	myFriends := s.friends[from]
 	if Contains(myFriends, to) {
 		return false
 	}
 
-	i.friendshipRequests[from] = append(myRequests, to)
-	// log.Println("Done! Requests =", requests, " and i.friendshipRequests[from] =", i.friendshipRequests[from])
-
+	s.friendshipRequests[from] = append(myRequests, to)
 	return true
 }
 
 // CheckUsersPassword returns true if user existst and has this password
-func (i *InMemoryUsersStore) CheckUsersPassword(user, password string) bool {
-	storedPassword, exists := i.users[user]
+func (s *InMemoryUsersStore) CheckUsersPassword(user, password string) bool {
+	storedPassword, exists := s.users[user]
 	return exists && storedPassword == password
 }
 
 // RespondToFriendshipRequest responds to a friendship request from otherUser made to user
 // Returns false iff friendship request does not exist (in this case no modifications are made)
-func (i *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool {
-	requests, hasRequests := i.friendshipRequests[otherUser]
+// Precondition: user and otherUser exist in the DB and have been correctly initialized (ie using AddUser function)
+func (s *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, acceptRequest bool) bool {
+	requests, hasRequests := s.friendshipRequests[otherUser]
 	if !hasRequests {
 		return false
 	}
 
-	for j := 0; j < len(requests); j++ {
-		if requests[j] == user {
-			i.friendshipRequests[otherUser] = Remove(i.friendshipRequests[otherUser], j)
+	myFriends := s.friends[user]
+	theirFriends := s.friends[otherUser]
+
+	for i := 0; i < len(requests); i++ {
+		if requests[i] == user {
+			s.friendshipRequests[otherUser] = Remove(requests, j)
 			if acceptRequest {
-				i.friends[user] = append(i.friends[user], otherUser)
-				i.friends[otherUser] = append(i.friends[otherUser], user)
+				s.friends[user] = append(myFriends, otherUser)
+				s.friends[otherUser] = append(theirFriends, user)
 			}
 			return true
 		}
@@ -86,9 +87,12 @@ func (i *InMemoryUsersStore) RespondToFriendshipRequest(user, otherUser string, 
 }
 
 // GetFriends returns the list od friends of a given user
-func (i *InMemoryUsersStore) GetFriends(user string) []string {
-	return i.friends[user]
+// Precondition: user exists in the DB and has been correctly initialized (ie using AddUser function)
+func (s *InMemoryUsersStore) GetFriends(user string) []string {
+	return s.friends[user]
 }
+
+// --- AUXILIARY FUNCTIONS ---
 
 // GetKeys returns a slice of the keys of map m
 // thoughts: returning a ptr might be more efficient; implementing this with interfaces would make func more general
@@ -119,6 +123,8 @@ func Remove(s []string, i int) []string {
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
 }
+
+// --- INITIALIZER ---
 
 // EmptyUsersStore returns a new empty InMemoryUsersStore
 func EmptyUsersStore() *InMemoryUsersStore {
