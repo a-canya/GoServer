@@ -63,6 +63,7 @@ func TestSendFriendshipRequest(t *testing.T) {
 	// Sign up users
 	RunSignUpTest(t, server, "sign up a new user", "arnau", "12345678", http.StatusOK)
 	RunSignUpTest(t, server, "sign up a new user", "sergi", "12345678", http.StatusOK)
+	RunSignUpTest(t, server, "sign up a new user", "berta", "12345678", http.StatusOK)
 
 	// Send friendship request
 	RunFriendshipRequestTest(t, server, "request friendship", "arnau", "sergi", http.StatusOK)
@@ -71,6 +72,8 @@ func TestSendFriendshipRequest(t *testing.T) {
 	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", http.StatusBadRequest)
 	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made; this situation is strange but should be possible)",
 		"sergi", "arnau", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (from user has already sent one request)", "arnau", "berta", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "berta", http.StatusBadRequest)
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {

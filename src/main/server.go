@@ -14,6 +14,7 @@ type UsersStore interface {
 	GetUsers() []string
 	AddUser(name string, password string) bool
 	UserExists(name string) bool
+	RequestFriendship(from, to string) bool
 }
 
 // UsersServer is a strcuture which contains an interface to interact with the users DB
@@ -118,7 +119,11 @@ func RequestFriendship(s *UsersServer, w *http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// ToDo: actually add pending request to the DB
-
-	(*w).WriteHeader(http.StatusOK)
+	// Add request to the DB
+	if ok := s.store.RequestFriendship(info["userFrom"], info["userTo"]); ok {
+		(*w).WriteHeader(http.StatusOK)
+	} else {
+		(*w).WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(*w, "Friendship request already exists")
+	}
 }
