@@ -1,7 +1,5 @@
 package main
 
-import "log"
-
 // InMemoryUsersStore collects data about users in memory.
 type InMemoryUsersStore struct {
 	users              map[string]string
@@ -34,21 +32,26 @@ func (i *InMemoryUsersStore) UserExists(name string) bool {
 }
 
 // RequestFriendship adds a friendship request from user `from` to user `to`.
-// Returns false iff friendship request already exists (in this case no modifications are made)
+// Returns false iff friendship request between both users already exists or users are already friends (in this case no modifications are made)
 func (i *InMemoryUsersStore) RequestFriendship(from, to string) bool {
 	// log.Println("RequestFriendship from", from, "to", to)
-	requests, exists := i.friendshipRequests[from]
-	// log.Println("Current requests from", from, ":", requests)
-
-	if exists {
-		if Contains(requests, to) {
-			return false
-		}
-		i.friendshipRequests[from] = append(requests, to)
-	} else {
-		log.Println("This should never happen")
-		i.friendshipRequests[from] = []string{to}
+	myRequests := i.friendshipRequests[from]
+	// log.Println("Current requests from", from, ":", myRequests)
+	if Contains(myRequests, to) {
+		return false
 	}
+
+	theirRequests := i.friendshipRequests[to]
+	if Contains(theirRequests, from) {
+		return false
+	}
+
+	myFriends := i.friends[from]
+	if Contains(myFriends, to) {
+		return false
+	}
+
+	i.friendshipRequests[from] = append(myRequests, to)
 	// log.Println("Done! Requests =", requests, " and i.friendshipRequests[from] =", i.friendshipRequests[from])
 
 	return true
