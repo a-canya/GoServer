@@ -56,6 +56,23 @@ func TestSignUp(t *testing.T) {
 	RunGetUsersTest(t, server, "list of users should include both users created", "[arnau carla]")
 }
 
+func TestSendFriendshipRequest(t *testing.T) {
+	store := EmptyUsersStore()
+	server := &UsersServer{store: store}
+
+	// Sign up users
+	RunSignUpTest(t, server, "sign up a new user", "arnau", "12345678", http.StatusOK)
+	RunSignUpTest(t, server, "sign up a new user", "sergi", "12345678", http.StatusOK)
+
+	// Send friendship request
+	RunFriendshipRequestTest(t, server, "request friendship", "arnau", "sergi", http.StatusOK)
+	RunFriendshipRequestTest(t, server, "request friendship (to user does not exist)", "arnau", "barbara", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (from user does not exist)", "david", "sergi", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (request is in pending status)", "arnau", "sergi", http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (opposite request has already been made; this situation is strange but should be possible)",
+		"sergi", "arnau", http.StatusOK)
+}
+
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
 	request, _ := http.NewRequest(http.MethodGet, "/getUsers", nil)
 	response := httptest.NewRecorder()
@@ -106,6 +123,38 @@ func RunSignUpTest(t *testing.T, s *UsersServer, testName, username, password st
 	response := httptest.NewRecorder()
 
 	s.ServeHTTP(response, request)
+
+	t.Run(testName, func(t *testing.T) {
+		gotStatus := response.Code
+		wantStatus := expectedHTTPStatus
+		ok := AssertStatus(t, gotStatus, wantStatus)
+
+		if !ok {
+			gotBody := response.Body.String()
+			t.Errorf("Got body: %q", gotBody)
+		}
+	})
+}
+
+func RunFriendshipRequestTest(t *testing.T, s *UsersServer, testName, userFrom, userTo string, expectedHTTPStatus int) {
+	requestBody, err := json.Marshal(map[string]string{
+		"userFrom": userFrom,
+		"userTo":   userTo,
+	})
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, "/requestFriendship", bytes.NewBuffer(requestBody))
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	request.Header.Set("Content-type", "appliaction/json")
+
+	response := httptest.NewRecorder()
 
 	t.Run(testName, func(t *testing.T) {
 		gotStatus := response.Code
