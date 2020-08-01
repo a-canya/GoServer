@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -24,9 +26,16 @@ func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "getUsers":
 		fmt.Fprint(w, s.store.GetUsers())
 	case "signUp":
-		user := "arnau"
-		password := "1234"
-		if ok := s.store.AddUser(user, password); ok {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Couldn't read the data")
+		}
+
+		var info map[string]string
+		json.Unmarshal(body, &info)
+
+		if ok := s.store.AddUser(info["name"], info["pass"]); ok {
 			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
