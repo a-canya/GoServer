@@ -17,17 +17,20 @@ type UsersServer struct {
 	store UsersStore
 }
 
-// Server serves HTTP requests
+// ServeHTTP serves HTTP requests
 func (s *UsersServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	option := strings.Split(r.URL.Path, "/")[1]
 	switch option {
 	case "getUsers":
 		fmt.Fprint(w, s.store.GetUsers())
 	case "signUp":
-		if ok := s.store.AddUser("arnau", "1234"); ok {
-			fmt.Fprint(w, "ok")
+		user := "arnau"
+		password := "1234"
+		if ok := s.store.AddUser(user, password); ok {
+			w.WriteHeader(http.StatusOK)
 		} else {
-			fmt.Fprint(w, "ko")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, "User already exists")
 		}
 	}
 }

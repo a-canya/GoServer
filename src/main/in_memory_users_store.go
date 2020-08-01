@@ -14,6 +14,9 @@ func (i *InMemoryUsersStore) GetUsers() []string {
 // AddUser adds a user
 // STUB
 func (i *InMemoryUsersStore) AddUser(name string, password string) bool {
+	if _, alreadyExists := i.users[name]; alreadyExists {
+		return false
+	}
 	i.users[name] = password
 	return true
 }
