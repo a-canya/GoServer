@@ -48,11 +48,9 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestSignUp(t *testing.T) {
-	store := InMemoryUsersStore{
-		users: map[string]string{},
-	}
+	store := EmptyUsersStore()
 
-	server := &UsersServer{store: &store}
+	server := &UsersServer{store: store}
 
 	// Request users
 	RunTest(t, server, &testOptions{name: "list of users at the beginning should be empty", want: "[]", url: "/getUsers"})
