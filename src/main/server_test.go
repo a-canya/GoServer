@@ -93,6 +93,9 @@ func TestFriendshipRequest(t *testing.T) {
 
 	RunRespondToFriendshipTest(t, server, "accept friendship (already accepted)", "sergi", "arnau", "12345678", true, http.StatusBadRequest)
 	RunRespondToFriendshipTest(t, server, "accept friendship (already accepted in opposite direction)", "arnau", "sergi", "12345678", true, http.StatusBadRequest)
+
+	// Send a request to a person who's already friend
+	RunFriendshipRequestTest(t, server, "request friendship (already friends)", "arnau", "sergi", "12345678", http.StatusBadRequest)
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
