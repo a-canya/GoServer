@@ -90,6 +90,11 @@ func TestFriendshipRequest(t *testing.T) {
 	// Requests: arnau->berta
 	// Friends: arnau&sergi
 
+	RunListFriends(t, server, "list friends of arnau (sergi)", "arnau", "[sergi]", http.StatusOK)
+	RunListFriends(t, server, "list friends of sergi (arnau)", "sergi", "[arnau]", http.StatusOK)
+	RunListFriends(t, server, "list friends of berta (none)", "berta", "[]", http.StatusOK)
+	RunListFriends(t, server, "list friends of peter (user does not exist)", "peter", "", http.StatusBadRequest)
+
 	RunRespondToFriendshipTest(t, server, "accept friendship (already accepted)", "sergi", "arnau", "12345678", true, http.StatusBadRequest)
 	RunRespondToFriendshipTest(t, server, "accept friendship (already accepted in opposite direction)", "arnau", "sergi", "12345678", true, http.StatusBadRequest)
 
@@ -117,6 +122,10 @@ func TestFriendshipRequest(t *testing.T) {
 	// Requests: berta->arnau
 	RunRespondToFriendshipTest(t, server, "decline friendship (again, but OK)", "arnau", "berta", "12345678", false, http.StatusOK) // sweet revenge
 	// Requests: -
+
+	RunListFriends(t, server, "list friends of arnau after friendship declines (sergi)", "arnau", "[sergi]", http.StatusOK)
+	RunListFriends(t, server, "list friends of sergi after friendship declines (arnau)", "sergi", "[arnau]", http.StatusOK)
+	RunListFriends(t, server, "list friends of berta after friendship declines (none)", "berta", "[]", http.StatusOK)
 
 	// Note: this test case has gotten absurdly big.... I should better split it into several tests
 }
@@ -263,6 +272,26 @@ func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, us
 			gotBody := response.Body.String()
 			t.Errorf("Got body: %q", gotBody)
 		}
+	})
+}
+
+func RunListFriends(t *testing.T, s *UsersServer, testName, user, expectedBody string, expectedHTTPStatus int) {
+	request, _ := http.NewRequest(http.MethodGet, "/getFriends/"+user, nil)
+	response := httptest.NewRecorder()
+
+	s.ServeHTTP(response, request)
+
+	t.Run(testName, func(t *testing.T) {
+		gotStatus := response.Code
+		wantStatus := expectedHTTPStatus
+		gotBody := response.Body.String()
+		wantBody := expectedBody
+
+		if statusOk := AssertStatus(t, gotStatus, wantStatus); !statusOk {
+			t.Errorf("Got body: %q", gotBody)
+		}
+
+		AssertResponseBody(t, gotBody, wantBody)
 	})
 }
 
