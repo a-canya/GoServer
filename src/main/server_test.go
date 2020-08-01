@@ -83,12 +83,11 @@ func TestFriendshipRequest(t *testing.T) {
 	RunRespondToFriendshipTest(t, server, "accept friendship (user does not exist)", "peter", "arnau", "12345678", true, http.StatusUnauthorized)
 	RunRespondToFriendshipTest(t, server, "accept friendship (wrong password)", "sergi", "arnau", "wrongPass", true, http.StatusUnauthorized)
 	RunRespondToFriendshipTest(t, server, "accept friendship (other user does not exist)", "sergi", "peter", "12345678", true, http.StatusBadRequest)
-	RunRespondToFriendshipTest(t, server, "accept friendship (other user does not exist)", "sergi", "peter", "12345678", true, http.StatusBadRequest)
 	RunRespondToFriendshipTest(t, server, "accept friendship (no existing request)", "sergi", "berta", "12345678", true, http.StatusBadRequest)
 	RunRespondToFriendshipTest(t, server, "accept friendship (existing request in opposite direction)", "arnau", "berta", "12345678", true, http.StatusBadRequest)
 	RunRespondToFriendshipTest(t, server, "accept friendship (OK)", "sergi", "arnau", "12345678", true, http.StatusOK)
 
-	// Requests: arnau->berta (both arnau->sergi and sergi->arnau must be deleted)
+	// Requests: arnau->berta
 	// Friends: arnau&sergi
 
 	RunRespondToFriendshipTest(t, server, "accept friendship (already accepted)", "sergi", "arnau", "12345678", true, http.StatusBadRequest)
@@ -96,6 +95,30 @@ func TestFriendshipRequest(t *testing.T) {
 
 	// Send a request to a person who's already friend
 	RunFriendshipRequestTest(t, server, "request friendship (already friends)", "arnau", "sergi", "12345678", http.StatusBadRequest)
+
+	// Decline friendship request
+	RunRespondToFriendshipTest(t, server, "decline friendship (user does not exist)", "peter", "arnau", "12345678", false, http.StatusUnauthorized)
+	RunRespondToFriendshipTest(t, server, "decline friendship (wrong password)", "berta", "arnau", "wrongPassword", false, http.StatusUnauthorized)
+	RunRespondToFriendshipTest(t, server, "decline friendship (other user does not exist)", "berta", "peter", "12345678", false, http.StatusBadRequest)
+	RunRespondToFriendshipTest(t, server, "decline friendship (no existing request)", "sergi", "berta", "12345678", false, http.StatusBadRequest)
+	RunRespondToFriendshipTest(t, server, "decline friendship (request should have been removed)", "arnau", "sergi", "12345678", false, http.StatusBadRequest)
+	RunRespondToFriendshipTest(t, server, "decline friendship (existing request in opposite direction)", "arnau", "berta", "12345678", false, http.StatusBadRequest)
+	RunRespondToFriendshipTest(t, server, "decline friendship (OK)", "berta", "arnau", "12345678", false, http.StatusOK) // Not nice, Berta :(
+
+	// Requests: -
+	// Friends: arnau&sergi
+
+	RunRespondToFriendshipTest(t, server, "decline friendship (already declined)", "berta", "arnau", "12345678", false, http.StatusBadRequest)
+	RunFriendshipRequestTest(t, server, "request friendship (they declined)", "arnau", "berta", "12345678", http.StatusOK)
+	// Requests: arnau->berta
+	RunRespondToFriendshipTest(t, server, "decline friendship (again, but OK)", "berta", "arnau", "12345678", false, http.StatusOK) // :( :( :(
+	// Requests: -
+	RunFriendshipRequestTest(t, server, "request friendship (I declined)", "berta", "arnau", "12345678", http.StatusOK)
+	// Requests: berta->arnau
+	RunRespondToFriendshipTest(t, server, "decline friendship (again, but OK)", "arnau", "berta", "12345678", false, http.StatusOK) // sweet revenge
+	// Requests: -
+
+	// Note: this test case has gotten absurdly big.... I should better split it into several tests
 }
 
 func RunGetUsersTest(t *testing.T, s *UsersServer, name, want string) {
@@ -242,6 +265,7 @@ func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, us
 		}
 	})
 }
+
 func AssertStatus(t *testing.T, got, want int) bool {
 	t.Helper()
 	if got != want {
