@@ -201,7 +201,7 @@ func RunRespondToFriendshipTest(t *testing.T, s *UsersServer, testName, user, us
 		log.Fatalln(err)
 	}
 
-	request, err := http.NewRequest(http.MethodPost, "/acceptFriendship", bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest(http.MethodPost, "/respondToFriendshipRequest", bytes.NewBuffer(requestBody))
 
 	if err != nil {
 		log.Fatalln(err)
