@@ -15,7 +15,6 @@ func TestGetUsers(t *testing.T) {
 			"arnau": "1234",
 		},
 	}
-
 	server := &UsersServer{store: &store}
 
 	// Request users
@@ -27,14 +26,16 @@ func TestGetUsers(t *testing.T) {
 
 func TestSignUp(t *testing.T) {
 	store := EmptyUsersStore()
-
 	server := &UsersServer{store: store}
 
 	// Request users
 	RunGetUsersTest(t, server, "list of users at the beginning should be empty", "[]")
 
 	// Sign up new user
-	RunSignUpTest(t, server, "arnau", "1234", "ok")
+	RunSignUpTest(t, server, "sign up a new user", "arnau", "1234", http.StatusOK)
+
+	// Sign up same user
+	RunSignUpTest(t, server, "sign up an already existing user", "arnau", "1234", http.StatusBadRequest)
 
 	// Request users
 	RunGetUsersTest(t, server, "list of users should include recently created user", "[arnau]")
@@ -65,16 +66,13 @@ func RunTest(t *testing.T, s *UsersServer, name, url, want string) {
 	t.Run(name, func(t *testing.T) {
 		got := response.Body.String()
 		want := want
-
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
+		AssertResponseBody(t, got, want)
 	})
 }
 
-func RunSignUpTest(t *testing.T, s *UsersServer, name, password, want string) {
+func RunSignUpTest(t *testing.T, s *UsersServer, testName, username, password string, expectedHTTPStatus int) {
 	requestBody, err := json.Marshal(map[string]string{
-		"name": name,
+		"name": username,
 		"pass": password,
 	})
 
@@ -94,12 +92,30 @@ func RunSignUpTest(t *testing.T, s *UsersServer, name, password, want string) {
 
 	s.ServeHTTP(response, request)
 
-	t.Run("sign up a new user", func(t *testing.T) {
-		got := response.Body.String()
-		want := want
+	t.Run(testName, func(t *testing.T) {
+		gotStatus := response.Code
+		wantStatus := expectedHTTPStatus
+		ok := AssertStatus(t, gotStatus, wantStatus)
 
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
+		if !ok {
+			gotBody := response.Body.String()
+			t.Errorf("Got body: %q", gotBody)
 		}
 	})
+}
+
+func AssertStatus(t *testing.T, got, want int) bool {
+	t.Helper()
+	if got != want {
+		t.Errorf("did not get correct status, got %d, want %d", got, want)
+		return false
+	}
+	return true
+}
+
+func AssertResponseBody(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("response body is wrong, got %q want %q", got, want)
+	}
 }
