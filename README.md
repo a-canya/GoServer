@@ -18,6 +18,7 @@ Returns a list of all users in the social network. Unless some problem external 
 Signs up a new user. Body must contain:
 - `user`: username (should be unique and 5-10 alphanumeric characters)
 - `pass`: password (should be 8-12 alphanumeric characters)
+
 If preconditions are not met will return HTTP status `400 BadRequest`, otherwise should return `200 OK`.
 
 ### POST `/requestFriendship`
@@ -25,6 +26,7 @@ Sends a friendship request. Body must contain:
 - `user`: username (should exist)
 - `pass`: password (should match user's password)
 - `userTo`: username of user to whom we want to send the request (should exist; should not be already friend of user and there should not be a pending friendship request between user and userTo)
+
 If username/password validation fails will return HTTP status `401 Unauthorized`, if preconditions are not met will return HTTP status `400 BadRequest`, otherwise should return `200 OK`.
 
 ### POST `/respondToFriendshipRequest`
@@ -33,6 +35,7 @@ Responds to a friendship request, either accepting or declining. Body must conta
 - `pass`: password (should match user's password)
 - `otherUser`: username of the other user (should exist; should have sent us a friendship request which is still pending)
 - `acceptRequest`: either "1" or "0" indicating whether the friendship request is accepted or not
+
 If username/password validation fails will return HTTP status `401 Unauthorized`, if preconditions are not met will return HTTP status `400 BadRequest`, otherwise should return `200 OK`.
 
 ### GET `/getFriends/`_\<user\>_
